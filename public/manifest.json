@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "YouTube Controller",
+  "name": "YouTube ControllerX",
   "version": "1.0",
   "action": {
     "default_popup": "popup.html"
