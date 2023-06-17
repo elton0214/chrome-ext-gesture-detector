@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from "react";
 import ReactDOM from 'react-dom';
 
 function ToggleButton() {
@@ -28,11 +28,10 @@ function ToggleButton() {
     </button>
   );
 }
-
 document.addEventListener('DOMContentLoaded', function () {
-  const reactTarget = document.getElementById('react-target');
-  if (reactTarget) {
+  const reactTargetBtn = document.getElementById('react-target-btn');
+  if (reactTargetBtn) {
     // render ToggleButton to reactTarget
-    ReactDOM.render(<ToggleButton />, reactTarget);
+    ReactDOM.render(<ToggleButton />, reactTargetBtn);
   }
 });
