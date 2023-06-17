@@ -7,6 +7,7 @@ import { drawHand } from "./utilities";
 import * as fp from "fingerpose";
 import victory from "./victory.png";
 import thumbs_up from "./thumbs_up.png";
+import {loveYouGesture} from "./LoveYou"; 
 
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -24,9 +25,9 @@ function playVideo() {
     } else {
       video.pause();
     }
-    setTimeout(() => {
-      console.log('Hold a second');
-    }, 1000);
+    // setTimeout(() => {
+    //   console.log('Video playback pressed. Hold 2 seconds');
+    // }, 2000);
   }
 }
 
@@ -35,7 +36,7 @@ function playVideo() {
 // Get access to the user's webcam
 navigator.mediaDevices.getUserMedia({ video: true })
   .then((stream) => {
-    console.log("---getUserMedia");
+    console.log("getUserMedia...");
     const video = document.createElement('video');
     video.srcObject = stream;
     video.play();
@@ -60,48 +61,75 @@ function runHandpose(video) {
 
 // Function to detect fingers
 function detect(net, video) {
-  console.log("---detect");
+  console.log("detecting...");
   if (typeof video !== 'undefined' && video.readyState === 4) {
     // Perform finger detection logic using the handpose model
     net.estimateHands(video).then((hands) => {
       if (hands.length > 0) {
-        console.log("---hands:",hands);
         // Perform finger detection and trigger desired actions based on conditions
         // Replace this logic with your specific finger detection and action code
-        const detectedFingers = performFingerDetection(hands[0]);
-        console.log("---detectedFingers:", detectedFingers);
-        if (detectedFingers === 'victory') {
-          // Send message to the background script or trigger desired action
-          chrome.runtime.sendMessage({ action: 'playbackButton', gesture: 'victory' });
-        }
+        performFingerDetection(hands[0]);
       }
     });
   }
 }
 
 // Function to perform finger detection logic
-function performFingerDetection(hand) {
-  // Replace this with your specific finger detection logic
-  // You can use the landmarks of the hand to determine finger positions and gestures
+async function performFingerDetection(hand) {
+  // // Replace this with your specific finger detection logic
+  // // You can use the landmarks of the hand to determine finger positions and gestures
 
-  // Example: Detect victory gesture
-  const thumbTip = hand.landmarks[4];
-  const indexTip = hand.landmarks[8];
-  const middleTip = hand.landmarks[12];
-  const ringTip = hand.landmarks[16];
-  const pinkyTip = hand.landmarks[20];
+  // // Example: Detect victory gesture
+  // const thumbTip = hand.landmarks[4];
+  // const indexTip = hand.landmarks[8];
+  // const middleTip = hand.landmarks[12];
+  // const ringTip = hand.landmarks[16];
+  // const pinkyTip = hand.landmarks[20];
 
-  // Assuming victory gesture is when thumb and index finger are extended
-  if (
-    thumbTip[1] < indexTip[1] &&
-    indexTip[1] < middleTip[1] &&
-    middleTip[1] < ringTip[1] &&
-    ringTip[1] < pinkyTip[1]
-  ) {
-    return 'victory';
+  // // Assuming victory gesture is when thumb and index finger are extended
+  // if (
+  //   thumbTip[1] < indexTip[1] &&
+  //   indexTip[1] < middleTip[1] &&
+  //   middleTip[1] < ringTip[1] &&
+  //   ringTip[1] < pinkyTip[1]
+  // ) {
+  //   return 'victory';
+  // }
+
+  // // Add more finger detection conditions as needed
+
+  // return null;
+
+  // Create a GestureEstimator with desired gestures
+  const GE = new fp.GestureEstimator([
+    fp.Gestures.VictoryGesture,
+    fp.Gestures.ThumbsUpGesture,
+    // fp.Gestures.ThumbsDownGesture,
+    // fp.Gestures.OkGesture,
+    // fp.Gestures.PinchGesture,
+    loveYouGesture
+  ]);
+
+  // Estimate the gestures based on hand landmarks
+  const gesture = await GE.estimate(hand.landmarks, 4);
+
+  // Check if any gestures were detected
+  if (gesture.gestures !== undefined && gesture.gestures.length > 0) {
+    // Get the gesture with the highest confidence
+    const confidence = gesture.gestures.map(prediction => prediction.confidence);
+    const maxConfidenceIndex = confidence.indexOf(Math.max(...confidence));
+    const maxConfidenceGesture = gesture.gestures[maxConfidenceIndex];
+    const gestureName = maxConfidenceGesture.name;
+    console.log("---gestureName:", gestureName);
+
+    // Do action for each posture
+    if (gestureName === 'victory') {
+      // Send message to the background script or trigger desired action\
+      chrome.runtime.sendMessage({ action: 'playbackButton', gesture: 'victory' });
+    }
+    // return gestureName;
   }
 
-  // Add more finger detection conditions as needed
-
-  return null;
+  // Return null if no gesture was detected
+  // return null;
 }
